@@ -1,0 +1,22 @@
+{
+  "name": "insta-chat",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "express": "^5.3.0",
+    "nodemailer": "^10.1.1",
+    "socket.io": "^4.8.4",
+    "sqlite3": "^6.0.1"
+  }
+}
