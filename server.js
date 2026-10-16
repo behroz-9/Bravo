@@ -59,7 +59,6 @@ db.serialize(() => {
 
 // --- REST API ROUTES ---
 
-// Register & Send OTP
 app.post('/api/register', async (req, res) => {
   const { username, email, password } = req.body;
   if (!username || !email || !password) {
@@ -96,7 +95,6 @@ app.post('/api/register', async (req, res) => {
   }
 });
 
-// Verify OTP
 app.post('/api/verify-otp', (req, res) => {
   const { email, otp } = req.body;
   db.get(`SELECT * FROM users WHERE email = ? AND otp_code = ?`, [email, otp], (err, user) => {
@@ -109,7 +107,6 @@ app.post('/api/verify-otp', (req, res) => {
   });
 });
 
-// Strict Login Route (Username + Gmail + Password must match)
 app.post('/api/login', (req, res) => {
   const { username, email, password } = req.body;
   if (!username || !email || !password) {
@@ -220,57 +217,62 @@ app.get('/', (req, res) => {
     body { background-color: #0b0b0b; color: #f5f5f5; height: 100vh; display: flex; justify-content: center; align-items: center; }
     .hidden { display: none !important; }
 
-    .auth-container { width: 100%; max-width: 380px; background: #121212; border: 1px solid #262626; padding: 40px 30px; border-radius: 12px; text-align: center; box-shadow: 0 4px 24px rgba(0,0,0,0.5); margin: 20px; }
+    .auth-container { width: 100%; max-width: 380px; background: #121212; border: 1px solid #262626; padding: 40px 30px; border-radius: 14px; text-align: center; box-shadow: 0 8px 32px rgba(0,0,0,0.6); margin: 20px; }
     .auth-container h1 { font-family: cursive; font-size: 42px; margin-bottom: 25px; color: #fff; font-weight: normal; }
-    .auth-container input { width: 100%; padding: 12px; margin-bottom: 12px; background: #121212; border: 1px solid #363636; border-radius: 6px; color: #fff; font-size: 14px; outline: none; }
-    .auth-container input:focus { border-color: #a8a8a8; }
-    .auth-btn { width: 100%; background: #6c5ce7; color: #fff; border: none; padding: 10px; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 10px; font-size: 14px; }
+    .input-group { position: relative; margin-bottom: 12px; }
+    .auth-container input { width: 100%; padding: 12px 15px; background: #181818; border: 1px solid #333; border-radius: 8px; color: #fff; font-size: 14px; outline: none; transition: border 0.2s; }
+    .auth-container input:focus { border-color: #6c5ce7; }
+    .eye-icon { position: absolute; right: 14px; top: 13px; cursor: pointer; color: #888; font-size: 15px; user-select: none; }
+    
+    .auth-btn { width: 100%; background: #6c5ce7; color: #fff; border: none; padding: 11px; border-radius: 8px; font-weight: 600; cursor: pointer; margin-top: 8px; font-size: 14px; transition: background 0.2s; }
     .auth-btn:hover { background: #5b4cc4; }
     .toggle-auth { margin-top: 20px; font-size: 14px; color: #a8a8a8; cursor: pointer; }
     .error-msg { color: #ff4757; font-size: 13px; margin-top: 10px; }
     .success-msg { color: #2ed573; font-size: 13px; margin-top: 10px; }
 
-    .app-container { display: flex; width: 1000px; height: 92vh; max-height: 850px; background: #000; border: 1px solid #262626; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.8); margin: 15px; }
-    .sidebar { width: 350px; border-right: 1px solid #262626; display: flex; flex-direction: column; background: #000; flex-shrink: 0; }
-    .sidebar-header { padding: 18px 20px; font-size: 18px; font-weight: 700; border-bottom: 1px solid #262626; display: flex; justify-content: space-between; align-items: center; }
+    /* Modern Theme App Container */
+    .app-container { display: flex; width: 1000px; height: 92vh; max-height: 850px; background: #0e0e10; border: 1px solid #222; border-radius: 14px; overflow: hidden; box-shadow: 0 12px 40px rgba(0,0,0,0.9); margin: 15px; }
+    .sidebar { width: 340px; border-right: 1px solid #222; display: flex; flex-direction: column; background: #0a0a0c; flex-shrink: 0; }
+    .sidebar-header { padding: 18px 20px; font-size: 16px; font-weight: 700; border-bottom: 1px solid #222; display: flex; justify-content: space-between; align-items: center; color: #fff; }
     
-    .search-box-container { padding: 12px 15px; border-bottom: 1px solid #262626; }
-    .search-box-container input { width: 100%; padding: 9px 14px; background: #1a1a1a; border: none; border-radius: 8px; color: #fff; font-size: 13px; outline: none; }
+    .search-box-container { padding: 12px 15px; border-bottom: 1px solid #222; }
+    .search-box-container input { width: 100%; padding: 10px 14px; background: #161619; border: 1px solid #2a2a2e; border-radius: 8px; color: #fff; font-size: 13px; outline: none; }
     
     .user-list { overflow-y: auto; flex: 1; }
-    .user-item { padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: background 0.2s; border-bottom: 1px solid #121212; }
-    .user-item:hover { background: #121212; }
-    .user-item.active { background: #1a1a1a; }
+    .user-item { padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; cursor: pointer; transition: background 0.2s; border-bottom: 1px solid #141416; }
+    .user-item:hover { background: #141418; }
+    .user-item.active { background: #1c1c24; }
     
     .user-info-left { display: flex; align-items: center; flex: 1; }
-    .avatar { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(45deg, #6c5ce7, #a29bfe); display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 12px; color: #fff; font-size: 16px; flex-shrink: 0; }
+    .avatar { width: 42px; height: 42px; border-radius: 50%; background: linear-gradient(135deg, #6c5ce7, #a29bfe); display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 12px; color: #fff; font-size: 16px; flex-shrink: 0; }
     
-    .follow-btn { background: #6c5ce7; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-weight: 600; font-size: 12px; cursor: pointer; }
-    .follow-btn.following { background: #262626; color: #f5f5f5; }
+    .follow-btn { background: #6c5ce7; color: #fff; border: none; padding: 6px 14px; border-radius: 6px; font-weight: 600; font-size: 12px; cursor: pointer; transition: background 0.2s; }
+    .follow-btn.following { background: #222; color: #ccc; }
 
-    .chat-window { flex: 1; display: flex; flex-direction: column; background: #000; }
-    .chat-header { padding: 18px 20px; border-bottom: 1px solid #262626; font-weight: 600; font-size: 15px; display: flex; align-items: center; gap: 12px; }
+    .chat-window { flex: 1; display: flex; flex-direction: column; background: #0e0e10; }
+    .chat-header { padding: 18px 20px; border-bottom: 1px solid #222; font-weight: 600; font-size: 15px; display: flex; align-items: center; gap: 12px; background: #0e0e10; }
     .back-btn { display: none; background: none; border: none; color: #6c5ce7; font-size: 16px; font-weight: bold; cursor: pointer; }
     
-    .messages-container { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; background: #0b0b0b; }
+    /* Gorgeous Chat Background Theme */
+    .messages-container { flex: 1; padding: 25px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: radial-gradient(circle at center, #14141a 0%, #0a0a0e 100%); }
     
-    .message-bubble { max-width: 70%; padding: 10px 14px; border-radius: 16px; font-size: 14px; position: relative; word-break: break-word; }
-    .message-bubble.sent { background: #6c5ce7; color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
-    .message-bubble.received { background: #262626; color: #f5f5f5; align-self: flex-start; border-bottom-left-radius: 4px; }
+    .message-bubble { max-width: 70%; padding: 11px 16px; border-radius: 16px; font-size: 14px; position: relative; word-break: break-word; box-shadow: 0 4px 12px rgba(0,0,0,0.3); }
+    .message-bubble.sent { background: linear-gradient(135deg, #6c5ce7, #5342e5); color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
+    .message-bubble.received { background: #1c1c22; color: #f0f0f5; align-self: flex-start; border-bottom-left-radius: 4px; border: 1px solid #282830; }
     .message-bubble.deleted .msg-text { font-style: italic; opacity: 0.6; }
     
-    .message-meta { font-size: 10px; margin-top: 4px; color: rgba(255,255,255,0.7); display: flex; justify-content: flex-end; gap: 8px; align-items: center; }
-    .action-btn { cursor: pointer; color: #ff4757; font-weight: bold; display: none; }
-    .reply-btn { cursor: pointer; color: #b2bec3; display: none; }
+    .message-meta { font-size: 10px; margin-top: 5px; color: rgba(255,255,255,0.65); display: flex; justify-content: flex-end; gap: 8px; align-items: center; }
+    .action-btn { cursor: pointer; color: #ff6b81; font-weight: bold; display: none; }
+    .reply-btn { cursor: pointer; color: #d1d8e0; display: none; }
     .message-bubble:hover .action-btn, .message-bubble:hover .reply-btn { display: inline; }
 
-    .reply-preview-bar { background: #121212; padding: 8px 15px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; border-top: 1px solid #262626; color: #b2bec3; }
+    .reply-preview-bar { background: #141418; padding: 10px 18px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; border-top: 1px solid #222; color: #b2bec3; }
     .cancel-reply { cursor: pointer; color: #6c5ce7; font-weight: 600; }
 
-    .chat-input-area { padding: 15px 20px; border-top: 1px solid #262626; display: flex; align-items: center; background: #000; }
-    .chat-input-area input { flex: 1; background: #121212; border: 1px solid #363636; border-radius: 22px; padding: 12px 18px; color: #fff; font-size: 14px; outline: none; }
+    .chat-input-area { padding: 15px 20px; border-top: 1px solid #222; display: flex; align-items: center; background: #0a0a0c; }
+    .chat-input-area input { flex: 1; background: #161619; border: 1px solid #2a2a2e; border-radius: 24px; padding: 12px 18px; color: #fff; font-size: 14px; outline: none; }
     .chat-input-area button { background: transparent; border: none; color: #6c5ce7; font-weight: 600; margin-left: 12px; cursor: pointer; font-size: 14px; }
-    .chat-input-area button:disabled { color: #363636; cursor: default; }
+    .chat-input-area button:disabled { color: #333; cursor: default; }
 
     @media (max-width: 768px) {
       body { align-items: stretch; justify-content: stretch; height: 100vh; background: #000; }
@@ -288,10 +290,19 @@ app.get('/', (req, res) => {
   <div id="authBox" class="auth-container">
     <h1>Cappuccino</h1>
     <form id="authForm">
-      <input type="text" id="usernameInput" placeholder="Username" required>
-      <input type="text" id="emailInput" placeholder="Real Gmail address" required>
-      <input type="password" id="passwordInput" placeholder="Password" required>
-      <input type="text" id="otpInput" placeholder="Enter 6-digit OTP Code" class="hidden">
+      <div class="input-group">
+        <input type="text" id="usernameInput" placeholder="Username" required>
+      </div>
+      <div class="input-group">
+        <input type="text" id="emailInput" placeholder="Real Gmail address" required>
+      </div>
+      <div class="input-group">
+        <input type="password" id="passwordInput" placeholder="Password" required>
+        <span class="eye-icon" id="togglePasswordBtn">👁️</span>
+      </div>
+      <div class="input-group">
+        <input type="text" id="otpInput" placeholder="Enter 6-digit OTP Code" class="hidden">
+      </div>
       <button type="submit" id="authSubmitBtn" class="auth-btn">Log In</button>
       <div id="authError" class="error-msg"></div>
       <div id="authSuccess" class="success-msg"></div>
@@ -335,7 +346,7 @@ app.get('/', (req, res) => {
   <script src="/socket.io/socket.io.js"></script>
   <script>
     const socket = io();
-    let authMode = 'login'; // 'login', 'signup', 'otp'
+    let authMode = 'login'; 
     let currentUser = null, activeRecipient = null, pendingEmail = null, replyingToMessageId = null;
     let allUsers = [], followingList = [];
 
@@ -343,6 +354,7 @@ app.get('/', (req, res) => {
     const authForm = document.getElementById('authForm'), authSubmitBtn = document.getElementById('authSubmitBtn');
     const usernameInput = document.getElementById('usernameInput'), emailInput = document.getElementById('emailInput');
     const passwordInput = document.getElementById('passwordInput'), otpInput = document.getElementById('otpInput');
+    const togglePasswordBtn = document.getElementById('togglePasswordBtn');
     const authError = document.getElementById('authError'), authSuccess = document.getElementById('authSuccess');
     const toggleAuthMode = document.getElementById('toggleAuthMode');
     
@@ -353,6 +365,17 @@ app.get('/', (req, res) => {
     const messageInput = document.getElementById('messageInput'), sendBtn = document.getElementById('sendBtn');
     const replyPreviewBar = document.getElementById('replyPreviewBar'), replyingToText = document.getElementById('replyingToText'), cancelReplyBtn = document.getElementById('cancelReplyBtn');
     const backToListBtn = document.getElementById('backToListBtn');
+
+    // Toggle Password Visibility (Eye Icon)
+    togglePasswordBtn.addEventListener('click', () => {
+      if (passwordInput.type === 'password') {
+        passwordInput.type = 'text';
+        togglePasswordBtn.textContent = '🙈';
+      } else {
+        passwordInput.type = 'password';
+        togglePasswordBtn.textContent = '👁️';
+      }
+    });
 
     toggleAuthMode.addEventListener('click', () => {
       authError.innerText = ''; authSuccess.innerText = '';
@@ -397,6 +420,7 @@ app.get('/', (req, res) => {
           usernameInput.classList.add('hidden');
           emailInput.classList.add('hidden');
           passwordInput.classList.add('hidden');
+          togglePasswordBtn.style.display = 'none';
           otpInput.classList.remove('hidden');
           authSubmitBtn.innerText = 'Verify OTP';
         } else {
@@ -480,8 +504,8 @@ app.get('/', (req, res) => {
           <div class="user-info-left" onclick="selectChat('\${u.username}')">
             <div class="avatar">\${u.username.charAt(0).toUpperCase()}</div>
             <div>
-              <div style="font-weight: 600; font-size: 14px;">\${u.username}</div>
-              <div style="font-size: 12px; color: #a8a8a8;">\${isFollowing ? 'Following' : 'Not following'}</div>
+              <div style="font-weight: 600; font-size: 14px; color:#fff;">\${u.username}</div>
+              <div style="font-size: 12px; color: #888;">\${isFollowing ? 'Following' : 'Not following'}</div>
             </div>
           </div>
           <button class="follow-btn \${isFollowing ? 'following' : ''}" onclick="toggleFollow(event, '\${u.username}')">
