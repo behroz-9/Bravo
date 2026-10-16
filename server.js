@@ -59,6 +59,7 @@ db.serialize(() => {
 
 // --- REST API ROUTES ---
 
+// Register & Send OTP
 app.post('/api/register', async (req, res) => {
   const { username, email, password } = req.body;
   if (!username || !email || !password) {
@@ -95,6 +96,7 @@ app.post('/api/register', async (req, res) => {
   }
 });
 
+// Verify OTP
 app.post('/api/verify-otp', (req, res) => {
   const { email, otp } = req.body;
   db.get(`SELECT * FROM users WHERE email = ? AND otp_code = ?`, [email, otp], (err, user) => {
@@ -107,14 +109,19 @@ app.post('/api/verify-otp', (req, res) => {
   });
 });
 
+// Strict Login Route (Username + Gmail + Password must match)
 app.post('/api/login', (req, res) => {
-  const { identifier, password } = req.body;
+  const { username, email, password } = req.body;
+  if (!username || !email || !password) {
+    return res.status(400).json({ success: false, error: 'Username, Email and Password are required.' });
+  }
+
   db.get(
-    `SELECT * FROM users WHERE (email = ? OR username = ?)`,
-    [identifier, identifier],
+    `SELECT * FROM users WHERE username = ? AND email = ?`,
+    [username, email],
     async (err, user) => {
       if (err) return res.status(500).json({ success: false, error: 'Database error.' });
-      if (!user) return res.status(401).json({ success: false, error: 'Invalid credentials or user not found.' });
+      if (!user) return res.status(401).json({ success: false, error: 'Username or Email did not match.' });
       if (user.is_verified === 0) return res.status(401).json({ success: false, error: 'Please verify your email first.' });
 
       const isMatch = await bcrypt.compare(password, user.password);
@@ -281,8 +288,8 @@ app.get('/', (req, res) => {
   <div id="authBox" class="auth-container">
     <h1>Cappuccino</h1>
     <form id="authForm">
-      <input type="text" id="usernameInput" placeholder="Username" class="hidden">
-      <input type="text" id="identifierInput" placeholder="Email or Username" required>
+      <input type="text" id="usernameInput" placeholder="Username" required>
+      <input type="text" id="emailInput" placeholder="Real Gmail address" required>
       <input type="password" id="passwordInput" placeholder="Password" required>
       <input type="text" id="otpInput" placeholder="Enter 6-digit OTP Code" class="hidden">
       <button type="submit" id="authSubmitBtn" class="auth-btn">Log In</button>
@@ -328,13 +335,13 @@ app.get('/', (req, res) => {
   <script src="/socket.io/socket.io.js"></script>
   <script>
     const socket = io();
-    let authMode = 'login';
+    let authMode = 'login'; // 'login', 'signup', 'otp'
     let currentUser = null, activeRecipient = null, pendingEmail = null, replyingToMessageId = null;
     let allUsers = [], followingList = [];
 
     const authBox = document.getElementById('authBox'), appBox = document.getElementById('appBox');
     const authForm = document.getElementById('authForm'), authSubmitBtn = document.getElementById('authSubmitBtn');
-    const usernameInput = document.getElementById('usernameInput'), identifierInput = document.getElementById('identifierInput');
+    const usernameInput = document.getElementById('usernameInput'), emailInput = document.getElementById('emailInput');
     const passwordInput = document.getElementById('passwordInput'), otpInput = document.getElementById('otpInput');
     const authError = document.getElementById('authError'), authSuccess = document.getElementById('authSuccess');
     const toggleAuthMode = document.getElementById('toggleAuthMode');
@@ -351,16 +358,18 @@ app.get('/', (req, res) => {
       authError.innerText = ''; authSuccess.innerText = '';
       if (authMode === 'login') {
         authMode = 'signup';
-        usernameInput.classList.remove('hidden');
         otpInput.classList.add('hidden');
-        identifierInput.placeholder = 'Real Gmail address';
+        usernameInput.classList.remove('hidden');
+        emailInput.classList.remove('hidden');
+        passwordInput.classList.remove('hidden');
         authSubmitBtn.innerText = 'Register & Send OTP';
         toggleAuthMode.innerHTML = 'Already have an account? <b>Log in</b>';
       } else {
         authMode = 'login';
-        usernameInput.classList.add('hidden');
         otpInput.classList.add('hidden');
-        identifierInput.placeholder = 'Email or Username';
+        usernameInput.classList.remove('hidden');
+        emailInput.classList.remove('hidden');
+        passwordInput.classList.remove('hidden');
         authSubmitBtn.innerText = 'Log In';
         toggleAuthMode.innerHTML = "Don't have an account? <b>Sign up</b>";
       }
@@ -372,7 +381,7 @@ app.get('/', (req, res) => {
 
       if (authMode === 'signup') {
         const username = usernameInput.value.trim();
-        const email = identifierInput.value.trim();
+        const email = emailInput.value.trim();
         const password = passwordInput.value;
 
         const res = await fetch('/api/register', {
@@ -386,7 +395,7 @@ app.get('/', (req, res) => {
           authSuccess.innerText = data.message;
           authMode = 'otp';
           usernameInput.classList.add('hidden');
-          identifierInput.classList.add('hidden');
+          emailInput.classList.add('hidden');
           passwordInput.classList.add('hidden');
           otpInput.classList.remove('hidden');
           authSubmitBtn.innerText = 'Verify OTP';
@@ -408,12 +417,14 @@ app.get('/', (req, res) => {
           authError.innerText = data.error;
         }
       } else {
-        const identifier = identifierInput.value.trim();
+        const username = usernameInput.value.trim();
+        const email = emailInput.value.trim();
         const password = passwordInput.value;
+
         const res = await fetch('/api/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ identifier, password })
+          body: JSON.stringify({ username, email, password })
         });
         const data = await res.json();
         if (data.success) {
